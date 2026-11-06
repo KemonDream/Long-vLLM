@@ -1,0 +1,439 @@
+status	path	provenance
+M	.gitignore	Apache-2.0 upstream vLLM + this patch set
+M	CMakeLists.txt	Apache-2.0 upstream vLLM + this patch set
+M	cmake/external_projects/vllm_flash_attn.cmake	Apache-2.0 upstream vLLM + this patch set
+A	cmake/sm70_79t.cmake	Apache-2.0 upstream vLLM + this patch set
+A	csrc/attention/sm70_79t/LICENSE	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_79t/PROVENANCE.md	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_79t/README.md	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_79t/VALIDATION.md	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_79t/include/cutlass/gemm/threadblock/mma_pipelined.h	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_79t/legacy_tail_adapter.cu	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_79t/prefill.cu	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_79t/prefill_q8192.cu	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_79t/register.cpp	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_79t/shared_workspace.h	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_79t/stable_rows.cuh	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_grouped_long/LICENSE	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	csrc/attention/sm70_grouped_long/include/fused_mha.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	csrc/attention/sm70_grouped_long/include/fused_mma.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	csrc/attention/sm70_grouped_long/kernel/flash_v100_traits.cuh	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	csrc/attention/sm70_grouped_long/kernel/fp8_kv_utils.cuh	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	csrc/attention/sm70_grouped_long/kernel/grouped-attention.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	csrc/attention/sm70_grouped_long/kernel/paged_kv_utils.cuh	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	csrc/attention/sm70_grouped_long/kernel/scalar-attention.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	csrc/attention/sm70_stable_compat.h	Apache-2.0 upstream vLLM + this patch set
+A	csrc/attention/sm70_v37/LICENSE	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_v37/PROVENANCE.md	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_v37/README.md	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_v37/bridge.cu	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_v37/epilogue_visitor_with_softmax.h	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_v37/gemm_with_softmax.h	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_v37/prefill.cu	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_v37/reduce_softmax_final.h	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_v37/register.cpp	Apache-2.0 1Cat-vLLM
+A	csrc/attention/sm70_v37/tail.cu	Apache-2.0 1Cat-vLLM
+D	csrc/custom_all_reduce.cuh	Apache-2.0 upstream vLLM + this patch set
+M	csrc/libtorch_stable/cuda_view.cu	Apache-2.0 upstream vLLM + this patch set
+M	csrc/libtorch_stable/custom_all_gather_reduce_scatter.cu	Apache-2.0 upstream vLLM + this patch set
+A	csrc/libtorch_stable/custom_all_gather_reduce_scatter.cuh	Apache-2.0 upstream vLLM + this patch set
+M	csrc/libtorch_stable/custom_all_reduce.cu	Apache-2.0 upstream vLLM + this patch set
+A	csrc/libtorch_stable/custom_all_reduce.cuh	Apache-2.0 upstream vLLM + this patch set
+M	csrc/libtorch_stable/layernorm_kernels.cu	Apache-2.0 upstream vLLM + this patch set
+M	csrc/libtorch_stable/ops.h	Apache-2.0 upstream vLLM + this patch set
+A	csrc/libtorch_stable/sm70_stable_registry.cpp	Apache-2.0 upstream vLLM + this patch set
+A	csrc/libtorch_stable/stable_data_ptr_shim.cu	Apache-2.0 upstream vLLM + this patch set
+M	csrc/libtorch_stable/torch_bindings.cpp	Apache-2.0 upstream vLLM + this patch set
+M	csrc/libtorch_stable/torch_utils.h	Apache-2.0 upstream vLLM + this patch set
+A	csrc/moe/marlin_moe_wna16/.gitignore	Apache-2.0 upstream vLLM + this patch set
+A	csrc/moe/marlin_moe_wna16/generate_kernels.py	Apache-2.0 upstream vLLM + this patch set
+A	csrc/moe/marlin_moe_wna16/kernel.h	Apache-2.0 upstream vLLM + this patch set
+A	csrc/moe/marlin_moe_wna16/marlin_template.h	Apache-2.0 upstream vLLM + this patch set
+A	csrc/moe/marlin_moe_wna16/ops.cu	Apache-2.0 upstream vLLM + this patch set
+A	csrc/moe/marlin_moe_wna16/sm70_marlin_fp8_gemm.cu	Apache-2.0 upstream vLLM + this patch set
+A	csrc/moe/marlin_moe_wna16/sm70_marlin_gemm.cuh	Apache-2.0 upstream vLLM + this patch set
+A	csrc/moe/marlin_moe_wna16/sm70_marlin_moe_dispatch.cu	Apache-2.0 upstream vLLM + this patch set
+A	csrc/moe/marlin_moe_wna16/sm70_marlin_mxfp4_gemm.cu	Apache-2.0 upstream vLLM + this patch set
+A	csrc/moe/marlin_moe_wna16/sm70_marlin_nvfp4_gemm.cu	Apache-2.0 upstream vLLM + this patch set
+A	csrc/moe/marlin_moe_wna16/sm70_marlin_u4_gemm.cu	Apache-2.0 upstream vLLM + this patch set
+A	csrc/moe/marlin_moe_wna16/sm70_marlin_u4b8_gemm.cu	Apache-2.0 upstream vLLM + this patch set
+A	csrc/moe/marlin_moe_wna16/sm70_marlin_u8_gemm.cu	Apache-2.0 upstream vLLM + this patch set
+A	csrc/moe/marlin_moe_wna16/sm70_marlin_u8b128_gemm.cu	Apache-2.0 upstream vLLM + this patch set
+M	csrc/ops.h	Apache-2.0 upstream vLLM + this patch set
+A	csrc/quantization/marlin/.gitignore	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/LICENSE	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/PROVENANCE.md	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/awq_marlin_repack.cu	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/dequant.h	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/generate_kernels.py	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/gptq_marlin_repack.cu	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/kernel.h	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/marlin.cu	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/marlin.cuh	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/marlin_dtypes.cuh	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/marlin_int4_fp8_preprocess.cu	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/marlin_mma.h	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/marlin_template.h	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/sm70_awq_marlin_repack.cu	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/sm70_gptq_marlin_repack.cu	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/sm70_marlin_common.cuh	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/sm70_marlin_dispatch.cu	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/sm70_marlin_fp8_gemm.cu	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/sm70_marlin_gemm.cuh	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/sm70_marlin_iterator_utils.cuh	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/sm70_marlin_mma.cuh	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/sm70_marlin_mxfp4_gemm.cu	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/sm70_marlin_nvfp4_gemm.cu	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/sm70_marlin_splitk.cuh	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/sm70_marlin_u4_gemm.cu	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/sm70_marlin_u4b8_gemm.cu	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/sm70_marlin_u8_gemm.cu	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/quantization/marlin/sm70_marlin_u8b128_gemm.cu	Apache-2.0 Marlin/vLLM + SM70 additions
+A	csrc/sm70_tile_runtime_signal.cuh	Apache-2.0 upstream vLLM + this patch set
+A	csrc/sm70_turbomind/lmdeploy/LICENSE	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/PROVENANCE.md	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/allocator.cc	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/allocator.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/buffer.cc	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/buffer.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/check.cc	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/check.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/common.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/context.cc	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/context.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/copy.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/core.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/cuda_data_type.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/data_type.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/interval.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/layout.cc	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/layout.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/module.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/ranges.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/serdes.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/state.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/stream.cc	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/stream.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/core/tensor.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/attention/quantization.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/core/array.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/core/array_ops.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/core/common.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/core/data_type.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/core/floating_point.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/core/layout.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/core/math.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/core/meta.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/core/mma.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/core/pipe_iter.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/core/smem.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/core/sub_byte_ptr.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/core/sync.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/core/thread_map.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/arch.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/arch/config_simt.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/arch/config_sm70_s884.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/arch/config_sm75_s16816.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/arch/config_sm80_s16816.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/arch/mma_simt.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/arch/mma_sm70.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/arch/mma_sm80.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/arch/operand_simt.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/arch/operand_sm70_s884.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/arch/operand_sm80_s16816.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/arch/smem_copy_simt.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/arch/smem_copy_sm70.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/arch/smem_copy_sm80.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/cast.cu	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/cast.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/context.cu	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/context.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/convert.cuh	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/convert.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/convert_v3.cu	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/cp_async.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/cta_map.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/desc.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/dispatch_cache.cu	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/dispatch_cache.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/epilogue.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/format.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/gemm.cu	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/gemm.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/gemm_universal.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/gemm_universal_sm90.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/gemm_universal_sm90_v2.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/gemm_universal_sm90_v3.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/gemm_universal_sm90_v4.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/gemm_universal_sm90_v5.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/gpu_metric.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/iterator.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/iterator_sm70.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/iterator_sm80.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/iterator_sm90.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/kernel.cu	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/kernel.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/kernel/sm70_884_16.cu	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/kernel/sm70_884_4.cu	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/kernel/sm70_884_8.cu	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/kernel_impl.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/kernel_impl_sm90.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/mainloop_sm70.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/mainloop_sm80_v2.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/matrix_ptr.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/moe_utils_v2.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/operand.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/predicate.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/registry.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/scaled_gmma_fp8_sm90.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/scheduler.cuh	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/scheduler_sm70.cuh	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/simt.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/sm90_utils.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/smem_copy.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/thread_group_map.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/thread_map.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/tiled_mma.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/tma.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/transform.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/tuner/cache_utils.cu	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/tuner/cache_utils.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/tuner/measurer.cu	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/tuner/measurer.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/tuner/params.cc	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/tuner/params.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/tuner/sampler.cu	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/tuner/sampler.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/tuner/stats.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/tuner/stopping_criterion.cc	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/tuner/stopping_criterion.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/types.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/unpack.cu	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/kernels/gemm/utils.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/macro.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/anomaly_handler.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/constant.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/cuda_bf16_fallbacks.cuh	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/cuda_bf16_wrapper.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/cuda_type_utils.cuh	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/cuda_utils.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/debug_utils.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/dispatch.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/logger.cc	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/logger.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/memory_utils.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/metrics.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/monotonic.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/nvtx_utils.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/parser.cc	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/parser.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/string_utils.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/lmdeploy/src/turbomind/utils/test_utils.h	Apache-2.0 LMDeploy/TurboMind
+A	csrc/sm70_turbomind/ops/LICENSE.v100-skinny	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/awq_qpn_m1_sm70.cu	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/awq_sm70_gemm.cu	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/diffusion_epilogue.h	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/exact_row_reduce.cu	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/fp8_qpn8_sm70.cu	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/glm53_cublaslt_sm70.cpp	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/glm53_fp16_gemv_sm70.cu	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/h3_column_major_gemm.h	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/h3_w8a16.cu	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/mxfp4_qpn_m1_sm70.cu	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/nvfp4_grouped_decode_sm70.cu	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/nvfp4_qpn2_layout.cuh	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/nvfp4_qpn2_sm70.cu	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/nvfp4_qpn4_sm70.cu	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/qwen38_prefill_cutlass.cu	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/qwen38_prefill_cutlass.cuh	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/sm70_top20_philox_fragment.cpp	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/sm70_top20_philox_sampler.cu	Apache-2.0 1Cat + MIT v100-skinny
+A	csrc/sm70_turbomind/ops/tm_registry_sm70.cu	Apache-2.0 1Cat + MIT v100-skinny
+M	csrc/torch_bindings.cpp	Apache-2.0 upstream vLLM + this patch set
+A	detect_cuda_compute_capabilities.cu	Apache-2.0 upstream vLLM + this patch set
+A	detect_cuda_version.cc	Apache-2.0 upstream vLLM + this patch set
+A	flash-attention-v100/AUTHORS	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/CMakeLists.txt	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/LICENSE	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/common/pytorch_shim.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/common/registration.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/flash_api.cpp	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/flash_api_torch_lib.cpp	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/alibi.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/block_info.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/dropout.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim128_causal_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim128_causal_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim128_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim128_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim192_causal_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim192_causal_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim192_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim192_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim256_causal_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim256_causal_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim256_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim256_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim32_causal_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim32_causal_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim32_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim32_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim64_causal_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim64_causal_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim64_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim64_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim96_causal_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim96_causal_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim96_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_hdim96_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_kernel.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_launch_template.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim128_causal_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim128_causal_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim128_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim128_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim192_causal_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim192_causal_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim192_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim192_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim256_causal_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim256_causal_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim256_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim256_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim32_causal_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim32_causal_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim32_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim32_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim64_causal_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim64_causal_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim64_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim64_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim96_causal_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim96_causal_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim96_prefill_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/flash_fwd_split_hdim96_sm70.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/generate_kernels.py	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/hardware_info.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/kernel_traits.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/mask.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/namespace_config.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/philox.cuh	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/philox_unpack.cuh	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/rotary.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/softmax.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/static_switch.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/csrc/flash_attn/src/utils.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/flash_attn_v100/__init__.py	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/flash_attn_v100/flash_attn_interface.py	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/include/fused_mha.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/include/fused_mma.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/contiguous_to_paged.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/flash_decode_paged.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/flash_decode_turboquant.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/flash_v100_traits.cuh	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/fp8_kv_bridge.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/fp8_kv_utils.cuh	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/fused_mha_api.cpp	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/fused_mha_backward.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/fused_mha_forward.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/fused_mha_forward_paged.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/fused_mha_forward_paged_full.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/h3/UPSTREAM.md	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/h3/default_fmha.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/h3/fmha.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/h3/forward.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/h3/forward_sparse.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/h3/prefetch_mma.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/h3/vsa_layout.h	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/paged_kv_utils.cuh	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/paged_to_contiguous.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/paged_to_contiguous_fixed.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/kernel/paged_to_contiguous_old.cu	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/pyproject.toml	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash-attention-v100/setup.py	BSD-3 D.Skryabin (via 1Cat for grouped_long)
+A	flash_qla/LICENSE	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/__init__.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/ops/__init__.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/ops/gated_delta_rule/__init__.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/ops/gated_delta_rule/chunk/__init__.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/ops/gated_delta_rule/chunk/cp_context.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/ops/gated_delta_rule/chunk/hopper/__init__.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/ops/gated_delta_rule/chunk/hopper/cp_fwd.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/ops/gated_delta_rule/chunk/hopper/fused_bwd.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/ops/gated_delta_rule/chunk/hopper/fused_fwd.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/ops/gated_delta_rule/chunk/hopper/kkt_solve.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/ops/gated_delta_rule/chunk/hopper/prepare_h.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/ops/gated_delta_rule/chunk/sm70/__init__.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/ops/gated_delta_rule/chunk/sm70/csrc/gdn_forward.cu	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/ops/gated_delta_rule/chunk/sm70/fused_fwd.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/ops/utils/__init__.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/ops/utils/cumsum.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/ops/utils/group_reduce.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/utils/__init__.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/utils/index.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/utils/math.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/utils/pack.py	MIT Qwen/Alibaba (via 1Cat)
+A	flash_qla/utils/profiler.py	MIT Qwen/Alibaba (via 1Cat)
+A	flashinfer-sm70/README.md	Apache-2.0 this patch set
+A	flashinfer-sm70/csrc/h3_noncausal_sm70.cu	Apache-2.0 this patch set
+A	flashinfer-sm70/include/flashinfer/attention/sm70/volta_mma.cuh	Apache-2.0 this patch set
+A	flashinfer-sm70/patches/README.md	Apache-2.0 this patch set
+M	setup.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/_custom_ops.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/_sm70_ops.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/compilation/sm70_decode_graph.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/config/speculative.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/entrypoints/generate/base/protocol.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/entrypoints/openai/chat_completion/protocol.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/envs.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/forward_context.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/model_executor/layers/layernorm.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/model_executor/layers/linear.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/mamba/linear_attn.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/mamba/ops/cpu/recurrent_gated_delta_rule.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/quantization/awq_qpn_sm70.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/quantization/awq_sm70_moe.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/quantization/compressed_tensors/compressed_tensors_moe/compressed_tensors_moe_wna16_marlin.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/quantization/compressed_tensors/schemes/compressed_tensors_w4a16_nvfp4.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/model_executor/layers/quantization/compressed_tensors/schemes/compressed_tensors_w4a4_nvfp4.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/quantization/fp8_sm70_moe.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/model_executor/layers/quantization/modelopt.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/quantization/mxfp4_sm70_moe.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/quantization/nvfp4_sm70_moe.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/quantization/sm70_moe_router.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/quantization/sm70_online_qpn8.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/quantization/sm70_turbomind.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/model_executor/layers/quantization/turboquant/config.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/model_executor/layers/quantization/utils/nvfp4_emulation_utils.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/sm70_attention.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/sm70_collective_calibration.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/sm70_collectives.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/sm70_diffusion.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/sm70_fp32_lm_head.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/model_executor/layers/sm70_sparse_attention.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/models/glm5next/nvidia/attention.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/models/glm5next/nvidia/kda.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/models/glm5next/nvidia/model.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/models/glm5next/nvidia/mtp.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/models/glm5next/nvidia/multimodal.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/platforms/cuda.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/sm70_decode_trace.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/third_party/flash_linear_attention/ops/chunk_delta_h.py	MIT FLA + SM70 pins
+M	vllm/third_party/flash_linear_attention/ops/chunk_o.py	MIT FLA + SM70 pins
+M	vllm/third_party/flash_linear_attention/ops/chunk_scaled_dot_kkt.py	MIT FLA + SM70 pins
+A	vllm/third_party/flash_linear_attention/ops/sm70_schedule.py	MIT FLA + SM70 pins
+A	vllm/v1/attention/backends/flash_attn_v100.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/v1/attention/backends/flashinfer_sm70.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/v1/attention/backends/flashinfer_sm70_planner.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/v1/attention/backends/registry.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/v1/attention/backends/triton_attn.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/v1/attention/backends/turboquant_attn.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/v1/attention/ops/sm70_e4m3_grouped.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/v1/attention/ops/sm70_e4m3_long.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/v1/attention/ops/sm70_e4m3_scalar.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/v1/attention/ops/triton_reshape_and_cache_flash.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/v1/kv_cache_interface.py	Apache-2.0 upstream vLLM + this patch set
+A	vllm/v1/worker/gpu/mamba_align.py	Apache-2.0 upstream vLLM + this patch set
+M	vllm/v1/worker/gpu/spec_decode/__init__.py	Apache-2.0 upstream vLLM + this patch set

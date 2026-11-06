@@ -1,0 +1,1074 @@
+diff --git a/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py b/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py
+index 9d5bcc8..cb67f9c 100644
+--- a/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py
++++ b/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py
+@@ -92,7 +92,7 @@ FUSED_GDN_STATE_DTYPES = (torch.float32, torch.bfloat16)
+ 
+ def _resolve_gdn_prefill_backend(
+     vllm_config: VllmConfig,
+-) -> tuple[str, Literal["triton", "flashinfer", "cutedsl"]]:
++) -> tuple[str, Literal["triton", "flashinfer", "cutedsl", "flashqla_sm70"]]:
+     """Resolve GDN prefill backend.
+ 
+     FlashInfer's GDN prefill kernel is chosen when:
+@@ -146,9 +146,80 @@ def _resolve_gdn_prefill_backend(
+         return backend, "flashinfer"
+     if backend == "cutedsl" and supports_cutedsl:
+         return backend, "cutedsl"
++    if backend in ["flashqla_sm70", "auto"] and _sm70_flashqla_prefill_available(
++        vllm_config
++    ):
++        return backend, "flashqla_sm70"
+     return backend, "triton"
+ 
+ 
++_FLASHQLA_SM70_DECISION: list[bool] = []
++
++
++def _sm70_flashqla_importable() -> bool:
++    """Cheap one-shot probe: is the SM70 FlashQLA GDN prefill extension built?"""
++    if _FLASHQLA_SM70_DECISION:
++        return _FLASHQLA_SM70_DECISION[0]
++    def _probe() -> bool:
++        from flash_qla.ops.gated_delta_rule.chunk.sm70 import (  # noqa: F401
++            chunk_gated_delta_rule_fwd_sm70_vlk_varlen,
++        )
++
++        return True
++
++    ok = False
++    try:
++        ok = _probe()
++    except ImportError:
++        # The vendored flash_qla tree sits next to the vllm package
++        # (<repo>/flash_qla and <repo>/vllm/), so it is only importable when the
++        # repo root happens to be on sys.path. Running `python -m
++        # vllm.entrypoints...` from an unrelated cwd does not put it there, which
++        # silently demoted the engine to the Triton FLA path.
++        import sys
++
++        import vllm as _vllm
++
++        # vllm/__init__.py lives at <repo_root>/vllm/__init__.py
++        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(_vllm.__file__)))
++        if repo_root not in sys.path:
++            sys.path.append(repo_root)
++        try:
++            ok = _probe()
++        except Exception:  # noqa: BLE001 - missing .so, missing torch symbols, etc.
++            ok = False
++    except Exception:  # noqa: BLE001
++        ok = False
++    _FLASHQLA_SM70_DECISION.append(ok)
++    return ok
++
++
++def _sm70_flashqla_prefill_available(vllm_config: VllmConfig) -> bool:
++    """SM70 fused GDN prefill (FlashQLA) is usable for this model.
++
++    Mirrors 1Cat-vLLM's gate: Volta, linear key head dim 128, fp16 activations.
++    The ``[Hv, V, K]`` state layout the kernel writes is exactly vLLM's
++    ``gated_delta_net_state_shape`` temporal layout, so no state transpose is
++    needed (see ``MambaStateShapeCalculator.gated_delta_net_state_shape``).
++
++    ``VLLM_SM70_GDN_FLASHQLA_PREFILL=0`` forces the Triton/FLA path back on, which
++    is the rollback lever for this route.
++    """
++    if not envs.VLLM_SM70_GDN_FLASHQLA_PREFILL:
++        return False
++    if not current_platform.is_cuda() or not current_platform.is_device_capability(70):
++        return False
++    head_k_dim = getattr(
++        vllm_config.model_config.hf_text_config, "linear_key_head_dim", None
++    )
++    if head_k_dim != 128:
++        return False
++    if vllm_config.model_config.dtype != torch.float16:
++        # The SM70 kernel is fp16 production-validated only.
++        return False
++    return _sm70_flashqla_importable()
++
++
+ def _log_gdn_backend_decision(
+     vllm_config: VllmConfig,
+     requested_backend: str,
+@@ -172,6 +243,7 @@ def _log_gdn_backend_decision(
+     chosen = {
+         "flashinfer": "FlashInfer",
+         "cutedsl": "CuteDSL",
++        "flashqla_sm70": "SM70 FlashQLA (fused chunk fwd)",
+         "triton": "Triton/FLA",
+     }[active_backend]
+     logger.info_once(
+@@ -187,6 +259,89 @@ def _log_gdn_backend_decision(
+         )
+ 
+ 
++def flashqla_sm70_chunk_gated_delta_rule(
++    q: torch.Tensor,
++    k: torch.Tensor,
++    v: torch.Tensor,
++    g: torch.Tensor,
++    beta: torch.Tensor,
++    initial_state: torch.Tensor,
++    output_final_state: bool,
++    cu_seqlens: torch.Tensor | None = None,
++    use_qk_l2norm_in_kernel: bool = False,
++    core_attn_out: torch.Tensor | None = None,
++) -> tuple[torch.Tensor, torch.Tensor | None]:
++    """SM70 fused GDN chunked prefill via the FlashQLA VLK varlen kernel.
++
++    Replaces the Triton/FLA pipeline (chunk_scaled_dot_kkt + solve_tril +
++    recompute_w_u + chunk_delta_h + chunk_o) with a single launch. The kernel
++    writes vLLM's ``[N, Hv, V, K]`` temporal state layout directly.
++
++    Inputs must be contiguous and fp16; unnormalised q/k overflow fp16 dot
++    products, so the caller is expected to have normalised already
++    (``use_qk_l2norm_in_kernel`` then stays False, as it is on the prefill path).
++    """
++    from flash_qla.ops.gated_delta_rule.chunk.sm70 import (
++        chunk_gated_delta_rule_fwd_sm70_vlk_varlen,
++    )
++
++    if use_qk_l2norm_in_kernel:
++        q = l2norm_fwd(q)
++        k = l2norm_fwd(k)
++
++    if cu_seqlens is None:
++        cu_seqlens = torch.tensor(
++            [0, q.shape[1]], device=q.device, dtype=torch.int32
++        )
++    elif cu_seqlens.dtype != torch.int32:
++        cu_seqlens = cu_seqlens.to(torch.int32)
++
++    output = None
++    if core_attn_out is not None:
++        candidate = core_attn_out[: q.shape[1]].unsqueeze(0)
++        if (
++            candidate.shape == v.shape
++            and candidate.dtype == v.dtype
++            and candidate.is_contiguous()
++        ):
++            # Write straight into the caller's buffer; skips an output copy.
++            output = candidate
++
++    q_arg = q if q.is_contiguous() else q.contiguous()
++    k_arg = k if k.is_contiguous() else k.contiguous()
++    v_arg = v if v.is_contiguous() else v.contiguous()
++    g_arg = g if g.is_contiguous() else g.contiguous()
++    beta_arg = beta if beta.is_contiguous() else beta.contiguous()
++    state_arg = (
++        initial_state if initial_state.is_contiguous() else initial_state.contiguous()
++    )
++    cu_arg = cu_seqlens if cu_seqlens.is_contiguous() else cu_seqlens.contiguous()
++
++    out, final_state = chunk_gated_delta_rule_fwd_sm70_vlk_varlen(
++        q=q_arg,
++        k=k_arg,
++        v=v_arg,
++        g=g_arg,
++        beta=beta_arg,
++        cu_seqlens=cu_arg,
++        initial_state=state_arg,
++        scale=q_arg.shape[-1] ** -0.5,
++        output_final_state=output_final_state,
++        validate_cu_seqlens=False,
++        output=output,
++    )
++
++    if core_attn_out is not None and output is None:
++        out_flat = out.squeeze(0).reshape(-1)
++        out_view = core_attn_out.reshape(-1)[: out_flat.numel()]
++        out_view.copy_(out_flat)
++        out = core_attn_out[: out.shape[1]].unsqueeze(0)
++
++    if not output_final_state:
++        final_state = None
++    return out, final_state
++
++
+ def fi_chunk_gated_delta_rule(
+     q: torch.Tensor,
+     k: torch.Tensor,
+@@ -309,6 +464,19 @@ class ChunkGatedDeltaRule(CustomOp):
+         use_qk_l2norm_in_kernel: bool = True,
+         core_attn_out: torch.Tensor | None = None,
+     ):
++        if self.gdn_prefill_backend == "flashqla_sm70":
++            return flashqla_sm70_chunk_gated_delta_rule(
++                q=q,
++                k=k,
++                v=v,
++                g=g,
++                beta=beta,
++                initial_state=initial_state,
++                output_final_state=output_final_state,
++                cu_seqlens=cu_seqlens,
++                use_qk_l2norm_in_kernel=use_qk_l2norm_in_kernel,
++                core_attn_out=core_attn_out,
++            )
+         return fla_chunk_gated_delta_rule(
+             q=q,
+             k=k,
+diff --git a/vllm/model_executor/layers/mamba/linear_attn.py b/vllm/model_executor/layers/mamba/linear_attn.py
+new file mode 100644
+index 0000000..5724e03
+--- /dev/null
++++ b/vllm/model_executor/layers/mamba/linear_attn.py
+@@ -0,0 +1,402 @@
++# SPDX-License-Identifier: Apache-2.0
++# SPDX-FileCopyrightText: Copyright contributors to the vLLM project
++
++import math
++from collections.abc import Callable
++
++import torch
++import torch.nn.functional as F
++from einops import rearrange
++from torch import nn
++
++from vllm.config import CacheConfig, ModelConfig, get_current_vllm_config
++from vllm.distributed.parallel_state import (
++    get_tensor_model_parallel_rank,
++    get_tensor_model_parallel_world_size,
++)
++from vllm.forward_context import ForwardContext, get_forward_context
++from vllm.model_executor.layers.lightning_attn import (
++    lightning_attention,
++    linear_decode_forward_triton,
++)
++from vllm.model_executor.layers.linear import ColumnParallelLinear, RowParallelLinear
++from vllm.model_executor.layers.mamba.abstract import MambaBase
++from vllm.model_executor.layers.mamba.mamba_utils import (
++    MambaStateDtypeCalculator,
++    MambaStateShapeCalculator,
++)
++from vllm.model_executor.layers.minimax_rms_norm import MiniMaxText01RMSNormTP
++from vllm.model_executor.layers.quantization import QuantizationConfig
++from vllm.utils.torch_utils import direct_register_custom_op
++from vllm.v1.attention.backend import AttentionMetadata
++from vllm.v1.attention.backends.linear_attn import LinearAttentionMetadata
++from vllm.v1.attention.backends.registry import MambaAttentionBackendEnum
++
++
++def clear_linear_attention_cache_for_new_sequences(
++    kv_cache: torch.Tensor,
++    state_indices_tensor: torch.Tensor,
++    attn_metadata: LinearAttentionMetadata,
++) -> None:
++    num_prefills = getattr(attn_metadata, "num_prefills", 0)
++    if num_prefills <= 0:
++        return
++
++    num_decode_tokens = getattr(attn_metadata, "num_decode_tokens", 0)
++    for prefill_idx in range(num_prefills):
++        q_start = attn_metadata.query_start_loc[num_decode_tokens + prefill_idx]
++        q_end = attn_metadata.query_start_loc[num_decode_tokens + prefill_idx + 1]
++        query_len = q_end - q_start
++        context_len = (
++            attn_metadata.seq_lens[num_decode_tokens + prefill_idx] - query_len
++        )
++        if context_len == 0:
++            block_to_clear = state_indices_tensor[num_decode_tokens + prefill_idx]
++            kv_cache[block_to_clear, ...] = 0
++
++
++def linear_attention_decode(
++    q: torch.Tensor,
++    k: torch.Tensor,
++    v: torch.Tensor,
++    kv_cache: torch.Tensor,
++    slope_rate: torch.Tensor,
++    state_indices_tensor: torch.Tensor,
++    q_start: int = 0,
++    q_end: int | None = None,
++    slot_start: int = 0,
++    slot_end: int | None = None,
++    block_size: int = 32,
++) -> torch.Tensor:
++    q = q[q_start:q_end].unsqueeze(2).contiguous()
++    k = k[q_start:q_end].unsqueeze(2).contiguous()
++    v = v[q_start:q_end].unsqueeze(2).contiguous()
++    slot_id = state_indices_tensor[slot_start:slot_end]
++    return linear_decode_forward_triton(
++        q, k, v, kv_cache, slope_rate, slot_id, block_size
++    )
++
++
++def linear_attention_prefill_and_mix(
++    q: torch.Tensor,
++    k: torch.Tensor,
++    v: torch.Tensor,
++    kv_cache: torch.Tensor,
++    state_indices_tensor: torch.Tensor,
++    attn_metadata: LinearAttentionMetadata,
++    slope_rate: torch.Tensor,
++    block_size: int,
++    decode_fn: Callable[..., torch.Tensor],
++    prefix_fn: Callable[..., torch.Tensor],
++    layer_idx: int | None = None,
++) -> torch.Tensor:
++    hidden = []
++    for _prefill_idx in range(getattr(attn_metadata, "num_prefills", 0)):
++        if _prefill_idx >= len(attn_metadata.query_start_loc):
++            break
++        if _prefill_idx >= len(state_indices_tensor):
++            break
++        offset = attn_metadata.num_decode_tokens
++        _start = attn_metadata.query_start_loc[offset + _prefill_idx]
++        _end = attn_metadata.query_start_loc[offset + _prefill_idx + 1]
++        slot_id = state_indices_tensor[offset + _prefill_idx]
++        qs = q[_start:_end].transpose(0, 1).contiguous()
++        ks = k[_start:_end].transpose(0, 1).contiguous()
++        vs = v[_start:_end].transpose(0, 1).contiguous()
++        slice_layer_cache = kv_cache[slot_id, ...]
++        out_slice = prefix_fn(
++            qs,
++            ks,
++            vs,
++            slice_layer_cache,
++            slope_rate,
++            block_size,
++            layer_idx=layer_idx,
++        )
++        hidden.append(out_slice.contiguous())
++
++    if attn_metadata.num_decode_tokens > 0:
++        hidden_decode = decode_fn(
++            q, k, v, kv_cache, state_indices_tensor, attn_metadata
++        )
++        hidden.insert(0, hidden_decode)
++
++    if not hidden:
++        return torch.empty((0, q.size(-1)), device=q.device, dtype=q.dtype)
++
++    hidden = torch.concat(hidden, dim=0).contiguous()
++    return hidden
++
++
++class MiniMaxText01LinearKernel:
++    @staticmethod
++    def jit_linear_forward_prefix(
++        q: torch.Tensor,
++        k: torch.Tensor,
++        v: torch.Tensor,
++        kv_caches: torch.Tensor,
++        slope_rate: torch.Tensor,
++        block_size: int,
++        layer_idx: int | None = None,
++        **kwargs,
++    ) -> torch.Tensor:
++        slope_rate = slope_rate.to(torch.float32)
++        should_pad_dim = q.dim() == 3
++        if should_pad_dim:
++            q = q.unsqueeze(0)
++            k = k.unsqueeze(0)
++            v = v.unsqueeze(0)
++        b, h, n, d = q.shape
++        e = d
++        kv_history = kv_caches.reshape(1, h, d, e).contiguous()
++        output, kv_history = lightning_attention(
++            q, k, v, slope_rate, block_size=block_size, kv_history=kv_history
++        )
++        kv_caches.copy_(kv_history[:, :, -1, :, :].reshape(h, d, e))
++        assert output.shape[0] == 1, "batch size must be 1"
++        return rearrange(output.squeeze(0), "h n d -> n (h d)")
++
++
++class MiniMaxText01LinearAttention(nn.Module, MambaBase):
++    @property
++    def mamba_type(self) -> MambaAttentionBackendEnum:
++        return MambaAttentionBackendEnum.LINEAR
++
++    def get_state_dtype(self) -> tuple[torch.dtype]:
++        assert self.model_config is not None
++        assert self.cache_config is not None
++        return MambaStateDtypeCalculator.linear_attention_state_dtype(
++            self.model_config.dtype,
++            self.cache_config.mamba_cache_dtype,
++        )
++
++    def get_state_shape(self) -> tuple[tuple[int, int, int], ...]:
++        return MambaStateShapeCalculator.linear_attention_state_shape(
++            num_heads=self.num_heads, tp_size=self.tp_size, head_dim=self.head_dim
++        )
++
++    def __init__(
++        self,
++        hidden_size: int,
++        hidden_inner_size: int,
++        num_heads: int,
++        head_dim: int,
++        max_position: int,
++        block_size: int,
++        num_hidden_layer: int,
++        model_config: ModelConfig | None = None,
++        cache_config: CacheConfig | None = None,
++        quant_config: QuantizationConfig | None = None,
++        layer_idx: int = 0,
++        linear_layer_idx: int = 0,
++        prefix: str = "linear_attn",
++    ) -> None:
++        super().__init__()
++
++        self.layer_idx = layer_idx
++        self.BLOCK = block_size
++        self.hidden_size = hidden_size
++        self.num_heads = num_heads
++        self.head_dim = head_dim
++        self.total_num_heads = num_heads
++        self.hidden_inner_size = hidden_inner_size
++        self.tp_size = get_tensor_model_parallel_world_size()
++        self.tp_rank = get_tensor_model_parallel_rank()
++
++        assert self.total_num_heads % self.tp_size == 0
++        self.tp_heads = self.total_num_heads // self.tp_size
++        self.qkv_size = self.num_heads * self.head_dim
++        self.tp_hidden = self.head_dim * self.tp_heads
++        self.model_config = model_config
++        self.cache_config = cache_config
++        self.prefix = prefix
++
++        self.qkv_proj = ColumnParallelLinear(
++            hidden_size,
++            self.hidden_inner_size * 3,
++            bias=False,
++            quant_config=quant_config,
++            prefix=f"{prefix}.qkv_proj",
++        )
++        self.output_gate = ColumnParallelLinear(
++            hidden_size,
++            self.hidden_inner_size,
++            bias=False,
++            quant_config=quant_config,
++            prefix=f"{prefix}.output_gate",
++        )
++        self.out_proj = RowParallelLinear(
++            self.hidden_inner_size,
++            hidden_size,
++            bias=False,
++            quant_config=quant_config,
++            prefix=f"{prefix}.out_proj",
++        )
++        self.norm = MiniMaxText01RMSNormTP(
++            self.hidden_inner_size,
++            eps=1e-5,
++        )
++
++        slope_rate = MiniMaxText01LinearAttention._build_slope_tensor(self.num_heads)
++        if num_hidden_layer <= 1:
++            self.slope_rate = slope_rate * (1 + 1e-5)
++        else:
++            self.slope_rate = slope_rate * (
++                1 - layer_idx / (num_hidden_layer - 1) + 1e-5
++            )
++        self.tp_slope = self.slope_rate[
++            self.tp_rank * self.tp_heads : (self.tp_rank + 1) * self.tp_heads
++        ].contiguous()
++
++        compilation_config = get_current_vllm_config().compilation_config
++        if prefix in compilation_config.static_forward_context:
++            raise ValueError(f"Duplicate layer name: {prefix}")
++        compilation_config.static_forward_context[prefix] = self
++
++    @staticmethod
++    def weight_direct_load(param: torch.Tensor, loaded_weight: torch.Tensor) -> None:
++        assert param.size() == loaded_weight.size()
++        param.data.copy_(loaded_weight)
++        return
++
++    @staticmethod
++    def _build_slope_tensor(n_attention_heads: int):
++        def get_slopes(n):
++            def get_slopes_power_of_2(n):
++                start = 2 ** (-(2 ** -(math.log2(n) - 3)))
++                ratio = start
++                return [start * ratio**i for i in range(n)]
++
++            if math.log2(n).is_integer():
++                return get_slopes_power_of_2(n)
++            else:
++                closest_power_of_2 = 2 ** math.floor(math.log2(n))
++                return (
++                    get_slopes_power_of_2(closest_power_of_2)
++                    + get_slopes(2 * closest_power_of_2)[0::2][: n - closest_power_of_2]
++                )
++
++        slopes = torch.tensor(
++            get_slopes(n_attention_heads), dtype=torch.float32
++        ).reshape(n_attention_heads, 1, 1)
++        return slopes
++
++    def _prefill_and_mix_infer(
++        self, q, k, v, kv_cache, state_indices_tensor, attn_metadata
++    ):
++        return linear_attention_prefill_and_mix(
++            q=q,
++            k=k,
++            v=v,
++            kv_cache=kv_cache,
++            state_indices_tensor=state_indices_tensor,
++            attn_metadata=attn_metadata,
++            slope_rate=self.tp_slope,
++            block_size=self.BLOCK,
++            decode_fn=self._decode_infer,
++            prefix_fn=MiniMaxText01LinearKernel.jit_linear_forward_prefix,
++            layer_idx=self.layer_idx,
++        )
++
++    def _decode_infer(self, q, k, v, kv_cache, state_indices_tensor, attn_metadata):
++        hidden = linear_attention_decode(
++            q,
++            k,
++            v,
++            kv_cache,
++            self.tp_slope,
++            state_indices_tensor,
++            q_start=0,
++            q_end=attn_metadata.num_decode_tokens,
++            slot_start=0,
++            slot_end=attn_metadata.num_decodes,
++            block_size=32,
++        )
++        return hidden
++
++    def forward(
++        self, hidden_states: torch.Tensor, output: torch.Tensor, positions: torch.Tensor
++    ) -> None:
++        torch.ops.vllm.linear_attention(
++            hidden_states,
++            output,
++            positions,
++            self.prefix,
++        )
++
++    def _forward(
++        self, hidden_states: torch.Tensor, output: torch.Tensor, positions: torch.Tensor
++    ) -> None:
++        forward_context = get_forward_context()
++        attn_metadata_raw = forward_context.attn_metadata
++        attn_metadata: AttentionMetadata | None = None
++        if attn_metadata_raw is not None:
++            assert isinstance(attn_metadata_raw, dict)
++            attn_metadata = attn_metadata_raw[self.prefix]
++            assert isinstance(attn_metadata, LinearAttentionMetadata)
++            num_actual_tokens = (
++                attn_metadata.num_prefill_tokens + attn_metadata.num_decode_tokens
++            )
++        else:
++            num_actual_tokens = hidden_states.shape[0]
++
++        qkv, _ = self.qkv_proj(hidden_states[:num_actual_tokens])
++        qkv32 = qkv.to(torch.float32)
++        qkvact = torch.nn.functional.silu(qkv32)
++        qkvact = qkvact.view((qkv.shape[0], self.tp_heads, -1))
++        q, k, v = torch.split(qkvact, [self.head_dim] * 3, dim=-1)
++        if attn_metadata is not None:
++            kv_cache = self.kv_cache[0]
++            state_indices_tensor = attn_metadata.state_indices_tensor
++            clear_linear_attention_cache_for_new_sequences(
++                kv_cache, state_indices_tensor, attn_metadata
++            )
++
++        decode_only = getattr(attn_metadata, "num_prefills", 0) == 0
++        if attn_metadata is None:
++            hidden = torch.empty(
++                (q.shape[0], q.shape[1] * q.shape[2]), device=q.device, dtype=q.dtype
++            )
++        else:
++            if not decode_only:
++                hidden = self._prefill_and_mix_infer(
++                    q, k, v, kv_cache, state_indices_tensor, attn_metadata
++                )
++            else:
++                hidden = self._decode_infer(
++                    q, k, v, kv_cache, state_indices_tensor, attn_metadata
++                )
++        hidden = self.norm._forward(hidden)
++        gate, _ = self.output_gate(hidden_states[:num_actual_tokens])
++        hidden = F.sigmoid(gate) * hidden
++        hidden = hidden.to(hidden_states.dtype)
++
++        output[:num_actual_tokens], _ = self.out_proj(hidden)
++
++
++def linear_attention(
++    hidden_states: torch.Tensor,
++    output: torch.Tensor,
++    positions: torch.Tensor,
++    layer_name: str,
++) -> None:
++    forward_context: ForwardContext = get_forward_context()
++    self = forward_context.no_compile_layers[layer_name]
++    self._forward(hidden_states=hidden_states, output=output, positions=positions)
++
++
++def linear_attention_fake(
++    hidden_states: torch.Tensor,
++    output: torch.Tensor,
++    positions: torch.Tensor,
++    layer_name: str,
++) -> None:
++    return
++
++
++direct_register_custom_op(
++    op_name="linear_attention",
++    op_func=linear_attention,
++    mutates_args=["output"],
++    fake_impl=linear_attention_fake,
++)
+diff --git a/vllm/model_executor/layers/mamba/ops/cpu/recurrent_gated_delta_rule.py b/vllm/model_executor/layers/mamba/ops/cpu/recurrent_gated_delta_rule.py
+new file mode 100644
+index 0000000..30fca34
+--- /dev/null
++++ b/vllm/model_executor/layers/mamba/ops/cpu/recurrent_gated_delta_rule.py
+@@ -0,0 +1,223 @@
++# SPDX-License-Identifier: Apache-2.0
++# SPDX-FileCopyrightText: Copyright contributors to the vLLM project
++
++
++import torch
++import torch.nn.functional as F
++
++
++def l2norm(
++    x: torch.Tensor,
++    dim: int = -1,
++    eps: float = 1e-6,
++) -> torch.Tensor:
++    inv_norm = torch.rsqrt((x * x).sum(dim=dim, keepdim=True) + eps)
++    return x * inv_norm
++
++
++def recurrent_gated_delta_rule(
++    query: torch.Tensor,
++    key: torch.Tensor,
++    value: torch.Tensor,
++    g: torch.Tensor,
++    beta: torch.Tensor,
++    initial_state: torch.Tensor,
++    scale: float | None = None,
++    use_qk_l2norm_in_kernel: bool = False,
++) -> tuple[torch.Tensor, torch.Tensor]:
++    initial_dtype = query.dtype
++    if use_qk_l2norm_in_kernel:
++        query = l2norm(query, dim=-1, eps=1e-6)
++        key = l2norm(key, dim=-1, eps=1e-6)
++
++    if query.shape[2] != value.shape[2]:
++        repeat_factor = value.shape[2] // query.shape[2]
++        query = query.repeat_interleave(repeat_factor, dim=2)
++        key = key.repeat_interleave(repeat_factor, dim=2)
++
++    query, key, value, beta, g = [
++        x.transpose(1, 2).contiguous().to(torch.float32)
++        for x in (query, key, value, beta, g)
++    ]
++
++    batch_size, num_heads, sequence_length, _ = key.shape
++    v_head_dim = value.shape[-1]
++    if scale is None:
++        scale = 1 / (query.shape[-1] ** 0.5)
++    query = query * scale
++
++    core_attn_out = torch.empty(
++        batch_size,
++        num_heads,
++        sequence_length,
++        v_head_dim,
++        dtype=value.dtype,
++    )
++    last_recurrent_state = initial_state.to(value)
++
++    for token_idx in range(sequence_length):
++        q_t = query[:, :, token_idx]
++        k_t = key[:, :, token_idx]
++        v_t = value[:, :, token_idx]
++        g_t = g[:, :, token_idx].exp().unsqueeze(-1).unsqueeze(-1)
++        beta_t = beta[:, :, token_idx].unsqueeze(-1)
++
++        last_recurrent_state = last_recurrent_state * g_t
++        kv_mem = (last_recurrent_state * k_t.unsqueeze(-2)).sum(dim=-1)
++        delta = (v_t - kv_mem) * beta_t
++        last_recurrent_state = last_recurrent_state + delta.unsqueeze(
++            -1
++        ) * k_t.unsqueeze(-2)
++        core_attn_out[:, :, token_idx] = (last_recurrent_state * q_t.unsqueeze(-2)).sum(
++            dim=-1
++        )
++
++    core_attn_out = core_attn_out.transpose(1, 2).contiguous().to(initial_dtype)
++    return core_attn_out, last_recurrent_state
++
++
++def gdn_gating(
++    A_log: torch.Tensor,
++    a: torch.Tensor,
++    b: torch.Tensor,
++    dt_bias: torch.Tensor,
++    beta: float = 1.0,
++    threshold: float = 20.0,
++) -> tuple[torch.Tensor, torch.Tensor]:
++    softplus_x = F.softplus(a.float() + dt_bias.float(), beta=beta, threshold=threshold)
++    g = -torch.exp(A_log.float()) * softplus_x
++    beta_output = torch.sigmoid(b.float()).to(dtype=b.dtype)
++    return g, beta_output
++
++
++def chunk_gated_delta_rule(
++    q: torch.Tensor,
++    k: torch.Tensor,
++    v: torch.Tensor,
++    g: torch.Tensor,
++    beta: torch.Tensor,
++    *,
++    initial_state: torch.Tensor,
++    scale: float | None = None,
++    cu_seqlens: torch.Tensor,
++    use_qk_l2norm_in_kernel: bool = False,
++) -> tuple[torch.Tensor, torch.Tensor]:
++    output = torch.empty_like(v)
++    state_dtype = initial_state.dtype
++    chunk_size = 128
++    sequence_bounds = [
++        (
++            seq_idx,
++            int(cu_seqlens[seq_idx].item()),
++            int(cu_seqlens[seq_idx + 1].item()),
++        )
++        for seq_idx in range(len(cu_seqlens) - 1)
++    ]
++    chunk_eye = torch.eye(chunk_size, dtype=torch.float32)
++    num_sequences = len(sequence_bounds)
++    num_value_heads = v.shape[2]
++    value_head_dim = v.shape[3]
++    key_head_dim = k.shape[3]
++    final_state = torch.empty(
++        (num_sequences, num_value_heads, value_head_dim, key_head_dim),
++        dtype=state_dtype,
++    )
++
++    for seq_idx, begin, end in sequence_bounds:
++        q_seq = q[:, begin:end]
++        k_seq = k[:, begin:end]
++        v_seq = v[:, begin:end]
++        g_seq = g[:, begin:end]
++        beta_seq = beta[:, begin:end]
++
++        initial_dtype = q_seq.dtype
++        if use_qk_l2norm_in_kernel:
++            q_seq = l2norm(q_seq, dim=-1, eps=1e-6)
++            k_seq = l2norm(k_seq, dim=-1, eps=1e-6)
++
++        num_qk_heads = q_seq.shape[2]
++        num_value_heads = v_seq.shape[2]
++        if num_qk_heads != num_value_heads:
++            repeat_factor = num_value_heads // num_qk_heads
++            q_seq = q_seq.repeat_interleave(repeat_factor, dim=2)
++            k_seq = k_seq.repeat_interleave(repeat_factor, dim=2)
++
++        q_seq, k_seq, v_seq, beta_seq, g_seq = [
++            x.transpose(1, 2).contiguous().to(torch.float32)
++            for x in (q_seq, k_seq, v_seq, beta_seq, g_seq)
++        ]
++        seq_batch_size, num_heads, seq_len, qk_head_dim = q_seq.shape
++        value_head_dim = v_seq.shape[-1]
++
++        if scale is None:
++            scale = 1 / (qk_head_dim**0.5)
++
++        q_seq = q_seq * scale
++
++        seq_state = initial_state[seq_idx : seq_idx + 1].to(v_seq)
++        seq_output = torch.empty(
++            seq_batch_size,
++            num_heads,
++            seq_len,
++            value_head_dim,
++            dtype=v_seq.dtype,
++        )
++
++        for chunk_start in range(0, seq_len, chunk_size):
++            chunk_end = min(chunk_start + chunk_size, seq_len)
++            q_chunk = q_seq[:, :, chunk_start:chunk_end]
++            k_chunk = k_seq[:, :, chunk_start:chunk_end]
++            v_chunk = v_seq[:, :, chunk_start:chunk_end]
++            beta_chunk = beta_seq[:, :, chunk_start:chunk_end]
++            g_chunk = g_seq[:, :, chunk_start:chunk_end]
++            chunk_len = chunk_end - chunk_start
++
++            cum_g = g_chunk.cumsum(dim=-1)
++            exp_cum_g = cum_g.exp()
++            decay = (cum_g.unsqueeze(-1) - cum_g.unsqueeze(-2)).exp()
++
++            interaction = (k_chunk * beta_chunk.unsqueeze(-1)) @ k_chunk.transpose(
++                -1, -2
++            )
++            interaction = torch.tril(interaction * decay, diagonal=-1)
++            system = interaction + chunk_eye[:chunk_len, :chunk_len]
++
++            solved_values = torch.linalg.solve_triangular(
++                system,
++                v_chunk * beta_chunk.unsqueeze(-1),
++                upper=False,
++            )
++            solved_keys = torch.linalg.solve_triangular(
++                system,
++                (k_chunk * beta_chunk.unsqueeze(-1)) * exp_cum_g.unsqueeze(-1),
++                upper=False,
++            )
++
++            incoming_memory = torch.einsum("bhvk,bhck->bhcv", seq_state, solved_keys)
++            transformed_values = solved_values - incoming_memory
++
++            # Each chunk contributes both from the incoming recurrent state and
++            # from its own in-chunk interactions.
++            inter_chunk = torch.einsum(
++                "bhvk,bhck->bhcv",
++                seq_state,
++                q_chunk * exp_cum_g.unsqueeze(-1),
++            )
++            intra_chunk = torch.tril((q_chunk @ k_chunk.transpose(-1, -2)) * decay)
++            seq_output[:, :, chunk_start:chunk_end] = (
++                inter_chunk + intra_chunk @ transformed_values
++            )
++
++            # Carry the recurrent state forward to the next chunk boundary.
++            end_decay = (cum_g[:, :, -1:] - cum_g).exp().unsqueeze(-1)
++            decayed_keys = k_chunk * end_decay
++            seq_state = seq_state * exp_cum_g[:, :, -1, None, None] + torch.einsum(
++                "bhcv,bhck->bhvk", transformed_values, decayed_keys
++            )
++
++        output[0, begin:end].copy_(
++            seq_output.transpose(1, 2).contiguous().to(initial_dtype).squeeze(0)
++        )
++        final_state[seq_idx].copy_(seq_state.squeeze(0).to(state_dtype).contiguous())
++
++    return output, final_state
+diff --git a/vllm/third_party/flash_linear_attention/ops/chunk_delta_h.py b/vllm/third_party/flash_linear_attention/ops/chunk_delta_h.py
+index eb1c3af..8570a6c 100644
+--- a/vllm/third_party/flash_linear_attention/ops/chunk_delta_h.py
++++ b/vllm/third_party/flash_linear_attention/ops/chunk_delta_h.py
+@@ -12,6 +12,8 @@ import torch
+ 
+ from vllm.triton_utils import tl, triton
+ 
++from .sm70_schedule import sm70_ints, sm70_schedule_enabled
++
+ from .index import prepare_chunk_indices, prepare_chunk_offsets
+ from .op import exp, exp2
+ from .utils import FLA_CHUNK_SIZE, use_cuda_graph
+@@ -19,6 +21,9 @@ from .utils import FLA_CHUNK_SIZE, use_cuda_graph
+ NUM_WARPS = [2, 4, 8, 16]
+ # Triton's AMD backend fails to lower this kernel with num_stages=4.
+ _CHUNK_DELTA_H_NUM_STAGES = [2, 3] if torch.version.hip else [2, 3, 4]
++_use_sm70_delta_h_schedule = sm70_schedule_enabled(
++    "VLLM_SM70_GDN_DELTA_H_SCHEDULE"
++)
+ 
+ 
+ @triton.heuristics(
+@@ -32,12 +37,25 @@ _CHUNK_DELTA_H_NUM_STAGES = [2, 3] if torch.version.hip else [2, 3, 4]
+     }
+ )
+ @triton.autotune(
+-    configs=[
+-        triton.Config({"BV": BV}, num_warps=num_warps, num_stages=num_stages)
+-        for num_warps in [2, 4]
+-        for num_stages in _CHUNK_DELTA_H_NUM_STAGES
+-        for BV in [32, 64]
+-    ],
++    configs=(
++        [
++            triton.Config(
++                {"BV": BV}, num_warps=num_warps, num_stages=num_stages
++            )
++            for BV in sm70_ints("VLLM_SM70_GDN_DELTA_H_BV", [16])
++            for num_warps in sm70_ints("VLLM_SM70_GDN_DELTA_H_WARPS", [8])
++            for num_stages in sm70_ints("VLLM_SM70_GDN_DELTA_H_STAGES", [1])
++        ]
++        if _use_sm70_delta_h_schedule
++        else [
++            triton.Config(
++                {"BV": BV}, num_warps=num_warps, num_stages=num_stages
++            )
++            for num_warps in [2, 4]
++            for num_stages in _CHUNK_DELTA_H_NUM_STAGES
++            for BV in [32, 64]
++        ]
++    ),
+     key=["H", "K", "V", "BT"],
+     use_cuda_graph=use_cuda_graph,
+ )
+diff --git a/vllm/third_party/flash_linear_attention/ops/chunk_o.py b/vllm/third_party/flash_linear_attention/ops/chunk_o.py
+index 0c323b8..3a0e2d8 100644
+--- a/vllm/third_party/flash_linear_attention/ops/chunk_o.py
++++ b/vllm/third_party/flash_linear_attention/ops/chunk_o.py
+@@ -16,12 +16,33 @@ from vllm.triton_utils import tl, triton
+ 
+ from .index import prepare_chunk_indices
+ from .op import exp
++from .sm70_schedule import sm70_ints, sm70_schedule_enabled
+ from .utils import FLA_CHUNK_SIZE, check_shared_mem, is_nvidia_hopper
+ 
+ BKV_LIST = [64, 128] if check_shared_mem() else [32, 64]
+ NUM_WARPS = [2, 4] if is_nvidia_hopper else [2, 4, 8]
+ 
+ 
++_use_sm70_chunk_o_schedule = sm70_schedule_enabled("VLLM_SM70_GDN_CHUNK_O_SCHEDULE")
++_CHUNK_O_CONFIGS = (
++    [
++        triton.Config({"BK": BK, "BV": BV}, num_warps=num_warps, num_stages=num_stages)
++        for BK in sm70_ints("VLLM_SM70_GDN_CHUNK_O_BK", [32, 64])
++        for BV in sm70_ints("VLLM_SM70_GDN_CHUNK_O_BV", [32, 64])
++        for num_warps in sm70_ints("VLLM_SM70_GDN_CHUNK_O_WARPS", [4, 8])
++        for num_stages in sm70_ints("VLLM_SM70_GDN_CHUNK_O_STAGES", [2])
++    ]
++    if _use_sm70_chunk_o_schedule
++    else [
++        triton.Config({"BK": BK, "BV": BV}, num_warps=num_warps, num_stages=num_stages)
++        for BK in BKV_LIST
++        for BV in BKV_LIST
++        for num_warps in NUM_WARPS
++        for num_stages in [2, 3, 4]
++    ]
++)
++
++
+ @triton.heuristics(
+     {
+         "USE_G": lambda args: args["g"] is not None,
+@@ -29,13 +50,7 @@ NUM_WARPS = [2, 4] if is_nvidia_hopper else [2, 4, 8]
+     }
+ )
+ @triton.autotune(
+-    configs=[
+-        triton.Config({"BK": BK, "BV": BV}, num_warps=num_warps, num_stages=num_stages)
+-        for BK in BKV_LIST
+-        for BV in BKV_LIST
+-        for num_warps in NUM_WARPS
+-        for num_stages in [2, 3, 4]
+-    ],
++    configs=_CHUNK_O_CONFIGS,
+     key=["H", "K", "V", "BT"],
+ )
+ @triton.jit(do_not_specialize=["T"])
+diff --git a/vllm/third_party/flash_linear_attention/ops/chunk_scaled_dot_kkt.py b/vllm/third_party/flash_linear_attention/ops/chunk_scaled_dot_kkt.py
+index 10ff970..5fcaaec 100644
+--- a/vllm/third_party/flash_linear_attention/ops/chunk_scaled_dot_kkt.py
++++ b/vllm/third_party/flash_linear_attention/ops/chunk_scaled_dot_kkt.py
+@@ -15,6 +15,7 @@ from vllm.triton_utils import tl, triton
+ 
+ from .index import prepare_chunk_indices
+ from .op import exp
++from .sm70_schedule import sm70_ints, sm70_schedule_enabled
+ from .utils import FLA_CHUNK_SIZE
+ 
+ # On RDNA (gfx11xx/gfx12xx) WMMA only
+@@ -28,6 +29,24 @@ if current_platform.is_rocm():
+     _CAST_DOT_TO_K_DTYPE = on_gfx1x()
+ 
+ 
++_use_sm70_kkt_schedule = sm70_schedule_enabled("VLLM_SM70_GDN_KKT_SCHEDULE")
++_KKT_CONFIGS = (
++    [
++        triton.Config({"BK": BK}, num_warps=num_warps, num_stages=num_stages)
++        for BK in sm70_ints("VLLM_SM70_GDN_KKT_BK", [32, 64])
++        for num_warps in sm70_ints("VLLM_SM70_GDN_KKT_WARPS", [4])
++        for num_stages in sm70_ints("VLLM_SM70_GDN_KKT_STAGES", [2])
++    ]
++    if _use_sm70_kkt_schedule
++    else [
++        triton.Config({"BK": BK}, num_warps=num_warps, num_stages=num_stages)
++        for BK in [32, 64, 128]
++        for num_warps in [2, 4, 8]
++        for num_stages in [2, 3, 4]
++    ]
++)
++
++
+ @triton.heuristics(
+     {
+         "USE_G": lambda args: args["g"] is not None,
+@@ -35,12 +54,7 @@ if current_platform.is_rocm():
+     }
+ )
+ @triton.autotune(
+-    configs=[
+-        triton.Config({"BK": BK}, num_warps=num_warps, num_stages=num_stages)
+-        for BK in [32, 64, 128]
+-        for num_warps in [2, 4, 8]
+-        for num_stages in [2, 3, 4]
+-    ],
++    configs=_KKT_CONFIGS,
+     key=["H", "K", "BT", "IS_VARLEN"],
+ )
+ @triton.jit(do_not_specialize=["T"])
+diff --git a/vllm/third_party/flash_linear_attention/ops/sm70_schedule.py b/vllm/third_party/flash_linear_attention/ops/sm70_schedule.py
+new file mode 100644
+index 0000000..b0fcefc
+--- /dev/null
++++ b/vllm/third_party/flash_linear_attention/ops/sm70_schedule.py
+@@ -0,0 +1,60 @@
++# SPDX-License-Identifier: Apache-2.0
++# SPDX-FileCopyrightText: Copyright contributors to the vLLM project
++# Added for this patch set: pinned Triton kernel schedules for SM70 (Volta),
++# which stop the autotuner from exhausting GPU memory during warmup. The
++# surrounding flash_linear_attention tree is FLA (MIT, Songlin Yang /
++# Yu Zhang) vendored by upstream vLLM; this file is an addition.
++
++"""SM70 (V100) autotune-schedule pinning for the Triton FLA GDN prefill kernels.
++
++The Triton chunked-GDN kernels ship a broad autotune space tuned for Hopper and
++newer parts. On Volta that search is both expensive and noisy: the winner varies
++between runs, and several candidates land on configs that serialise badly on 80
++SMs. 1Cat-vLLM pins a single schedule per kernel (kept here behind the same env
++names) so the accepted route does not depend on Triton autotune winner variance.
++
++These pins only affect the Triton fallback route; when the fused SM70 FlashQLA
++backend is active (``VLLM_SM70_GDN_FLASHQLA_PREFILL``) these kernels do not run at
++all.
++
++Override knobs are read directly from the environment on purpose - they exist for
++diagnostics and are not part of the supported config surface.
++"""
++
++import os
++
++
++def _sm70_capability() -> bool:
++    """True on CC 7.0 (V100). Never initialises CUDA just to answer the question."""
++    try:
++        import torch
++
++        if not torch.cuda.is_available():
++            return False
++        major, minor = torch.cuda.get_device_capability()
++        return major == 7 and minor == 0
++    except Exception:  # noqa: BLE001 - import-time probe must never raise
++        return False
++
++
++def sm70_schedule_enabled(env_name: str) -> bool:
++    """Schedule pinning for this kernel is on and we are actually on SM70."""
++    if os.getenv(env_name, "1") != "1":
++        return False
++    return _sm70_capability()
++
++
++def sm70_ints(env_name: str, default: list[int]) -> list[int]:
++    """Parse a comma/space separated positive-int list, else return ``default``."""
++    raw = os.getenv(env_name)
++    if not raw:
++        return list(default)
++    values: list[int] = []
++    for token in raw.replace(",", " ").split():
++        try:
++            value = int(token)
++        except ValueError:
++            continue
++        if value > 0:
++            values.append(value)
++    return values or list(default)

@@ -1,0 +1,103 @@
+SM70 / V100 (Volta) support for vLLM
+Copyright (c) 2026 the authors of this patch set.
+Licensed under the Apache License, Version 2.0, the same license as vLLM.
+See LICENSE for the full text.
+
+This distribution contains code from the projects below. Each is used under the
+terms of its own license, reproduced in the file listed. Where a project's files
+carry their own copyright header, that header is retained.
+
+Licence texts shipped with this patch set:
+
+  LICENSE                                        Apache-2.0 (this patch set, and vLLM)
+  csrc/quantization/marlin/LICENSE               Apache-2.0 (IST-DASLab/marlin)
+  csrc/attention/sm70_79t/LICENSE                Apache-2.0 (1Cat-vLLM)
+  csrc/attention/sm70_v37/LICENSE                Apache-2.0 (1Cat-vLLM)
+  csrc/attention/sm70_grouped_long/LICENSE       BSD-3-Clause (D.Skryabin)
+  csrc/sm70_turbomind/lmdeploy/LICENSE           Apache-2.0 (LMDeploy/TurboMind)
+  csrc/sm70_turbomind/ops/LICENSE.v100-skinny    MIT (v100-skinny)
+  flash-attention-v100/LICENSE                   BSD-3-Clause (D.Skryabin)
+  flash_qla/LICENSE                              MIT (Qwen, Alibaba Group)
+
+Not shipped here, because it arrives with upstream vLLM when this patch set is
+applied: vllm/third_party/flash_linear_attention/LICENSE (MIT, FLA). Only one
+file is added to that directory by this patch set (ops/sm70_schedule.py, which
+carries its own notice); the rest of the tree is upstream's.
+
+===========================================================================
+Apache License 2.0
+===========================================================================
+
+  vLLM                                  https://github.com/vllm-project/vllm
+    Base project. This patch set is generated against upstream tag v0.31.0,
+    commit db9527a46873454610df6dbedf79a36d6bf1a7f6.
+    License: LICENSE
+
+  1Cat-vLLM                             Copyright (c) 2026, 1CatAI
+    https://github.com/1CatAI/1Cat-vLLM
+    Source of the ported SM70/V100 kernel work, pinned at commit e501a0f.
+    Ported into this patch set:
+      csrc/attention/sm70_79t/          long-context prefill kernels
+      csrc/attention/sm70_v37/          prefill attention
+      csrc/attention/sm70_grouped_long/ grouped long attention (see BSD-3 below)
+      csrc/sm70_turbomind/              TurboMind W4A16/W4A4 dense and MoE ops
+      csrc/libtorch_stable/             SM70 extensions, custom all-reduce
+      vllm/third_party/flash_linear_attention/ops/   GDN schedule pins
+      the SM70 long-prefill fused add + RMSNorm kernel
+      the SM70/V100 target enablement in CMakeLists.txt and setup.py
+    This patch set would not exist in this form without their work. If you want
+    their complete stack, use their project.
+
+  LMDeploy / TurboMind                  https://github.com/InternLM/lmdeploy
+    csrc/sm70_turbomind/lmdeploy/ is a subset of TurboMind; LICENSE in that
+    directory. csrc/sm70_turbomind/ops/awq_sm70_gemm.cu is adapted from
+    TurboMind's s884h kernels.
+
+  Marlin (IST-DASLab)                   https://github.com/IST-DASLab/marlin
+    csrc/quantization/marlin/* adapted from Marlin.
+
+  NVIDIA apex                           https://github.com/NVIDIA/apex
+    Parts of setup.py are adapted from apex.
+
+  flashinfer-sm70/                      written for this patch set
+    Apache-2.0, vLLM contributors. No FlashInfer source is vendored; the
+    directory provides a Volta WMMA fragment layer under a FlashInfer-shaped
+    include path and is compiled directly by this tree's CMakeLists.txt.
+
+===========================================================================
+BSD 3-Clause
+===========================================================================
+
+  flash-attention-v100                   Copyright (c) 2025, D.Skryabin
+    Vendored tree. LICENSE retained at flash-attention-v100/ (the upstream
+    AUTHORS file in that tree is empty).
+
+  csrc/attention/sm70_grouped_long/      Copyright (c) 2025, D.Skryabin
+    LICENSE retained in that directory; SPDX headers added to each source file
+    by this patch set. Distributed via 1Cat-vLLM.
+
+  FlashAttention (Dao-AILab)             Copyright (c) 2024, Tri Dao
+    Copyright (c) 2023, Tri Dao.
+    Kernel headers and helpers throughout the attention code.
+
+  CUTLASS                                Copyright (c) NVIDIA CORPORATION
+    csrc/attention/sm70_79t/include/cutlass/* - per-file notices retained.
+
+===========================================================================
+MIT
+===========================================================================
+
+  flash_qla                              Copyright (c) 2026 Qwen, Alibaba Group
+    https://github.com/QwenLM
+    LICENSE retained at flash_qla/LICENSE; per-file headers retained.
+
+  v100-skinny contributors               Copyright (c) 2026 v100-skinny contributors
+    LICENSE retained at csrc/sm70_turbomind/ops/LICENSE.v100-skinny.
+
+  flash-linear-attention (FLA)           Copyright (c) 2023-2025 Songlin Yang, Yu Zhang
+    vllm/third_party/flash_linear_attention/*
+
+===========================================================================
+
+If anything here is incomplete or misattributed, that is an error in this file
+and not an intent to claim another's work. Corrections are welcome.
